@@ -1,4 +1,4 @@
-process PREPARE_REF_VCF{
+process PREPARE_REF_VCF_QUILT{
     label 'process_low'
     tag "$vcf"
     container 'quay.io/biocontainers/bcftools:1.21--h3a4d415_1'
@@ -18,11 +18,12 @@ process PREPARE_REF_VCF{
     bcftools view -m 2 -M 2 -v snps -i 'MAF>0.001' --threads ${task.cpus} -Oz -o biallelic.snp.maf0.001.${chr}.vcf.gz
     bcftools index -f biallelic.snp.maf0.001.${chr}.vcf.gz
 
+    zcat biallelic.snp.maf0.001.${chr}.vcf.gz| grep '^#'> biallelic.snp.maf0.001.unique_pos.vcf 
+    zcat biallelic.snp.maf0.001.${chr}.vcf.gz| awk '!/^#/ {print \$0}'|awk 'length(\$4)==1'|awk 'length(\$5)==1'| awk -F '\\t' '!a[\$2]++' >> biallelic.snp.maf0.001.unique_pos.vcf  
+    bgzip -f biallelic.snp.maf0.001.unique_pos.vcf
 
-    # Extracting variable positions in the reference panel
-    bcftools view -G -m 2 -M 2 -v snps biallelic.snp.maf0.001.${chr}.vcf.gz -Oz -o biallelic.snp.maf0.001.${chr}.sites.vcf.gz --threads ${task.cpus}
-    bcftools index -f biallelic.snp.maf0.001.${chr}.sites.vcf.gz
-    bcftools query -f '%CHROM\\t%POS\\t%REF,%ALT\\n' biallelic.snp.maf0.001.${chr}.sites.vcf.gz | bgzip -c > biallelic.snp.maf0.001.${chr}.sites.tsv.gz
-    tabix -s1 -b2 -e2 biallelic.snp.maf0.001.${chr}.sites.tsv.gz
+    # convert format
+    bcftools convert --haplegendsample biallelic.snp.maf0.001.unique_pos biallelic.snp.maf0.001.unique_pos.vcf.vcf.gz 
+    sed -i 's/sample population group sex/SAMPLE POP GROUP SEX/g' biallelic.snp.maf0.001.unique_pos.samples
     """
 }

@@ -4,9 +4,7 @@ process COMPUTE_GENOTYPE_LIKELIHOODS{
     container 'quay.io/biocontainers/bcftools:1.21--h3a4d415_1'
 
     input:
-    tuple val(sample_id), path(bam), path(bam_index)
-    tuple val(chr), path(vcf)
-    tuple val(chr), path(tsv)
+    tuple val(sample_id), path(bam), path(bam_index), val(chr), path(vcf), path(tsv)
     path ref
 
     output:

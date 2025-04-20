@@ -7,7 +7,7 @@ process GET_IMPUTATION_CHUNK {
     tuple val(chr), path(vcf)
 
     output:
-    tuple val(chr), path("chunks.G10K.${chr}.txt")
+    tuple val(chr), path("region_chunk_${chr}_*.txt")
 
     script:
     """
@@ -17,5 +17,6 @@ process GET_IMPUTATION_CHUNK {
         --window-size 2000000 \\
         --buffer-size 200000 \\
         --output chunks.G10K.${chr}.txt
+    awk '{print > ("region_chunk_${chr}_" \$1 ".txt")}' chunks.G10K.${chr}.txt
     """
 }

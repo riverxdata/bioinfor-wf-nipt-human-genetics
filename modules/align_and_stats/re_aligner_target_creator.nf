@@ -11,7 +11,7 @@ process RE_ALIGNER_TARGET_CREATOR {
     path known_indels_2
 
     output:
-    path "${sample_id}.indel_target_intervals.list"
+    tuple val(sample_id), path("${sample_id}.indel_target_intervals.list")
 
     script:
     """

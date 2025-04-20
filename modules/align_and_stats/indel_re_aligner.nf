@@ -4,12 +4,11 @@ process INDEL_RE_ALIGNER {
     container 'docker.io/pegi3s/gatk-3:3.8-0'
 
     input:
-    tuple val(sample_id), path(bam)
+    tuple val(sample_id), path(bam), path(target_interval)
     path ref
     path ref_dict
     path known_indels_1
     path known_indels_2
-    path target_interval
 
     output:
     tuple val(sample_id), path("${sample_id}.sorted.rmdup.realign.bam")

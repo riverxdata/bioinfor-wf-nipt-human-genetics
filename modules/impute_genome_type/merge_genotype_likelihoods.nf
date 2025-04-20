@@ -1,4 +1,5 @@
 process MERGE_GENOTYPE_LIKELIHOODS{
+    tag "$chr"
     label 'process_medium'
     container 'quay.io/biocontainers/bcftools:1.21--h3a4d415_1'
 
