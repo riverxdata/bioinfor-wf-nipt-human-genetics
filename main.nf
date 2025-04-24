@@ -26,17 +26,36 @@ include { PLINK2_PCA } from "./modules/pca/plink2_pca"
 // modules 6
 include { PLINK2_GWAS } from "./modules/gwas/plink2_gwas"
 
+def logParams() {
+    println "================== Pipeline Parameters ======================================================="
+    println "Input file:                 ${params.input}"
+    println "Phenotype file:            ${params.phenotype}"
+    println "Reference genome:          ${params.reference_genome}"
+    println "1k Gold Indel DB:          ${params.known_1k_gold_indel_db}"
+    println "Known Assembly Indel DB:   ${params.known_assembly_indel_db}"
+    println "dbSNP DB:                  ${params.dbsnp_db}"
+    println "Genetic Maps:              ${params.genetic_maps}"
+    println "Reference Panel DB:        ${params.ref_panel_db}"
+    println "=============================================================================================="
+    println "Workflow maintained by Thanh-Giang (River) Tan Nguyen"
+    println "For inquiries, contact: giangnguyen@riverxdata.com"
+    println "=============================================================================================="
+}
+
 workflow {
+    logParams()
     // inputs
+    phenotype_ch=Channel.fromPath(params.phenotype,checkIfExists: true)
     samples_ch = Channel
-        .fromPath("/home/river/bioinfor-wf-nipt/data/samples/fq.list")
+        .fromPath(params.input)
         .splitCsv(sep: '\t', header: false)
         .map { it -> 
         def (fq, sample_id, cell_id, lane_id) = it
         tuple(sample_id, cell_id, lane_id, file(fq),)
         }
+    // reference and db
     genome_index_ch = Channel
-        .fromPath('/home/river/bioinfor-wf-nipt/data/gcs/Homo_sapiens_assembly38.fasta*', checkIfExists: true)
+        .fromPath(params.reference_genome+'.fasta*', checkIfExists: true)
         .collect()
         .map { files ->
             def fasta_file = files.find { it.name.endsWith('.fasta') }
@@ -44,28 +63,28 @@ workflow {
             tuple(base_name, files)
         }
     ref_ch = Channel
-        .fromPath("/home/river/bioinfor-wf-nipt/data/gcs/Homo_sapiens_assembly38.{fasta,fasta.fai}",checkIfExists: true)
+        .fromPath(params.reference_genome + ".{fasta,fasta.fai}",checkIfExists: true)
         .collect()
     
     ref_dict_ch = Channel        
-        .fromPath("/home/river/bioinfor-wf-nipt/data/gcs/Homo_sapiens_assembly38.dict",checkIfExists: true)
+        .fromPath(params.reference_genome + ".dict",checkIfExists: true)
         .collect()
 
     known_1k_gold_indel_ch = Channel
-        .fromPath('/home/river/bioinfor-wf-nipt/data/gcs/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz*', checkIfExists: true)
+        .fromPath(params.known_1k_gold_indel_db + '*', checkIfExists: true)
         .collect()
     
     known_assembly_indel_ch = Channel
-        .fromPath('/home/river/bioinfor-wf-nipt/data/gcs/Homo_sapiens_assembly38.known_indels.vcf.gz*', checkIfExists: true)
+        .fromPath(params.known_assembly_indel_db + '*', checkIfExists: true)
         .collect()
     
     dbsnp_ch =  Channel
-        .fromPath('/home/river/bioinfor-wf-nipt/data/gcs/Homo_sapiens_assembly38.dbsnp138.vcf*', checkIfExists: true)
+        .fromPath(params.dbsnp_db + '*', checkIfExists: true)
         .collect()
 
 
     ref_panel_ch = Channel
-    .fromPath('/home/river/bioinfor-wf-nipt/data/phasing/*.vcf.gz', checkIfExists: true)
+    .fromPath(params.ref_panel_db + '/*.vcf.gz', checkIfExists: true)
     .map { vcf_file ->
         def match = (vcf_file.name =~ /(_chr[0-9XYM]+)\./)
         if (!match) exit 1, "Could not extract chromosome from ${vcf_file.name}"
@@ -73,6 +92,15 @@ workflow {
         def index_file = file("${vcf_file.toString()}.tbi")
         tuple(chrom, vcf_file, index_file)
     }
+
+    gmap_chr_ch = Channel
+        .fromPath(params.genetic_maps + '/*.gz', checkIfExists: true)
+        .map { gmap_file ->
+            def match = (gmap_file.name =~ /^(chr[0-9XYM]+)(?:_par\d+)?\.b38\.gmap\.gz$/)
+            if (!match) exit 1, "Could not extract chromosome from ${gmap_file.name}"
+            def chrom = match[0][1]
+            tuple(chrom, gmap_file)
+        }
 
     // module 1: Align and statistic
     ALIGN(
@@ -159,14 +187,7 @@ workflow {
     files.collect { file -> tuple(chr, file) }
     }
 
-    gmap_chr_ch = Channel
-    .fromPath('/home/river/bioinfor-wf-nipt/data/gmap/GLIMPSE/maps/genetic_maps.b38/*.gz', checkIfExists: true)
-    .map { gmap_file ->
-        def match = (gmap_file.name =~ /^(chr[0-9XYM]+)(?:_par\d+)?\.b38\.gmap\.gz$/)
-        if (!match) exit 1, "Could not extract chromosome from ${gmap_file.name}"
-        def chrom = match[0][1]
-        tuple(chrom, gmap_file)
-    }
+  
 
     phase_ch = gmap_chr_ch
     .join(MERGE_GENOTYPE_LIKELIHOODS.out)
@@ -210,7 +231,6 @@ workflow {
         CONCAT_LIGATE_VCF.out
     )
 
-    phenotype_ch=Channel.fromPath("/home/river/bioinfor-wf-nipt/data/gwas/phenotype.txt",checkIfExists: true)
     PLINK2_GWAS(
         phenotype_ch,
         PLINK2_PCA.out
