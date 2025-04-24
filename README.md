@@ -1,7 +1,12 @@
 <p align="center"> <h1 align="center">Bioinfor-wf-nipt-human-genetics</h1> </p> <p align="center"> <a href=""> <img height="300" src="./docs/assets/images/NIPT-Human-Genetics.png" alt="NIPT Human Genetics" align="center"> </a> </p>
 
 ## Overview
-Bioinfor-wf-nipt-human-genetics is an end-to-end NIPT (Non-Invasive Prenatal Testing) GWAS (Genome-Wide Association Study) pipeline designed for processing fastq files. This pipeline facilitates the analysis of human genetics for NIPT applications and can be easily adapted for various research scenarios.
+Bioinfor-wf-nipt-human-genetics is an end-to-end NIPT (Non-Invasive Prenatal Testing) GWAS (Genome-Wide Association Study) pipeline designed for processing fastq files. This pipeline facilitates the analysis of human genetics for NIPT applications and can be easily adapted for various research scenarios. 
+
+This one is the effort to reproduce the analysis on the below studies using nextflow and large scale cluster:
+1. Liu, S., Liu, Y., Gu, Y., Lin, X., Zhu, H., Liu, H., Xu, Z., Cheng, S., Lan, X., Li, L. and Huang, M., 2024. Utilizing non-invasive prenatal test sequencing data for human genetic investigation. Cell Genomics, 4(10)
+2. Zeng, J., Li, L., Lin, Y., Lan, X., Zhang, X., Wang, Y., Liao, M., Jin, X. and Zhu, H., 2025. Protocol for genetic analysis of population-scale ultra-low-depth sequencing data. STAR protocols, 6(1), p.103579.
+3. Xiao, H., Li, L., Yang, M., Zhang, X., Zhou, J., Zeng, J., Zhou, Y., Lan, X., Liu, J., Lin, Y. and Zhong, Y., 2024. Genetic analyses of 104 phenotypes in 20,900 Chinese pregnant women reveal pregnancy-specific discoveries. Cell Genomics, 4(10).
 
 ## Key Features
 End-to-end workflow for processing fastq files into NIPT GWAS results.
